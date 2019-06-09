@@ -1,6 +1,7 @@
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+using CodeCave.WakaTime.Revit;
 
 namespace CodeCave.WakaTime.Revit
 {
@@ -27,7 +28,10 @@ namespace CodeCave.WakaTime.Revit
             ElementSet elements
         )
         {
-            // open wakatime settings window
+            using (var settingsForm = new SettingsForm())
+            {
+                settingsForm.ShowDialog();
+            }
 
             return Result.Succeeded;
         }

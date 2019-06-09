@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Configurations>Debug;Debug One;Release</Configurations>
@@ -90,6 +90,7 @@
     <PackageReference Include="Autodesk.Revit.SDK" Version="2018.*" Condition=" '$(RevitVersion)' == '2018' " PrivateAssets="All" />
     <PackageReference Include="Autodesk.Revit.SDK" Version="2019.*" Condition=" '$(RevitVersion)' == '2019' " PrivateAssets="All" />
     <PackageReference Include="Autodesk.Revit.SDK" Version="2020.*" Condition=" '$(RevitVersion)' == '2020' " PrivateAssets="All" />
+    <PackageReference Include="Salaros.ConfigParser" Version="0.3.3" />
     <PackageReference Include="WakaTime" Version="8.1.11" />
   </ItemGroup>
   <Target Name="PreventRevitSDKCopyLocal" AfterTargets="ResolveReferences">
@@ -103,12 +104,42 @@
     <Content Include="AddinManifest.addin">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
+    <Compile Include="Forms\*.cs" Exclude="Forms\*.Designer.cs" />
+
+    <Compile Include="Forms\SettingsForm.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+    <EmbeddedResource Include="Forms\SettingsForm.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <SubType>Designer</SubType>
+      <DependentUpon>SettingsForm.cs</DependentUpon>
+    </EmbeddedResource>
+
+    <Compile Include="Forms\ApiKeyForm.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+    <EmbeddedResource Include="Forms\ApiKeyForm.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <SubType>Designer</SubType>
+      <DependentUpon>ApiKeyForm.cs</DependentUpon>
+    </EmbeddedResource>
+
+    <Compile Include="Forms\DownloadProgressForm.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+    <EmbeddedResource Include="Forms\DownloadProgressForm.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <SubType>Designer</SubType>
+      <DependentUpon>DownloadProgressForm.cs</DependentUpon>
+    </EmbeddedResource>
+
+
     <!-- Don't use standard resource generator, since it doesn't allow
          one to use strings containing spaces -->
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator />
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.ru-RU.resx">
+    <EmbeddedResource Include="Properties\**\*.resx">
       <Generator />
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\**\*.*">
@@ -126,6 +157,17 @@
     <Compile Include="Commands\SettingsCommand.cs" />
     <Compile Include="Helpers\StringLocalizer.cs" />
     <Compile Include="Helpers\ZeroDocStateAvailability.cs" />
+    <Compile Include="RevitWakaTimePlugin.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="Forms\DownloadProgressForm.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>DownloadProgressForm.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Forms\SettingsForm.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>SettingsForm.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
     <RootNamespace>CodeCave.WakaTime.Revit</RootNamespace>
