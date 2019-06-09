@@ -28,6 +28,8 @@ namespace CodeCave.WakaTime.Revit
     public class App : IExternalApplication
     {
         protected UIControlledApplication uiControlledApplication;
+        protected UIApplication uiApplication;
+        protected RevitWakaTimePlugin revitWakaTimePlugin;
 
         /// <summary>
         /// Initializes the <see cref="App"/> class.
@@ -53,7 +55,7 @@ namespace CodeCave.WakaTime.Revit
 #if REVIT2017
             // A workaround for a bug with UI culture in Revit 2017.1.1
             // More info here: https://forums.autodesk.com/t5/revit-api-forum/why-the-language-key-switches-currentculture-instead-of/m-p/6843557/highlight/true#M20779
-            var language = uiControlledApplication.ControlledApplication.Language.ToString();
+            var language = uiControlledApplication.Application.Language.ToString();
             Thread.CurrentThread.CurrentUICulture = CultureInfo
                                                         .GetCultures(CultureTypes.SpecificCultures)
                                                         .FirstOrDefault(c => language.Contains(c.EnglishName)) ?? Thread.CurrentThread.CurrentUICulture;
@@ -63,7 +65,7 @@ namespace CodeCave.WakaTime.Revit
 
             try
             {
-                // TODO: add you code here
+                uiControlledApplication.Idling += OnIdling;
             }
             catch (Exception ex)
             {
@@ -83,7 +85,7 @@ namespace CodeCave.WakaTime.Revit
         {
             try
             {
-                // TODO: add you code here
+                uiControlledApplication.Idling -= OnIdling;
             }
             catch (Exception ex)
             {
@@ -92,6 +94,14 @@ namespace CodeCave.WakaTime.Revit
             }
 
             return Result.Succeeded;
+        }
+
+        private void OnIdling(object sender, IdlingEventArgs e)
+        {
+            uiControlledApplication.Idling -= OnIdling;
+            uiApplication = sender as UIApplication;
+            revitWakaTimePlugin = new RevitWakaTimePlugin(uiApplication);
+            revitWakaTimePlugin.BindEditorEvents();
         }
 
         private void InitializeRibbon()

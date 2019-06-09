@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Windows.Forms;
 using WakaTime;
 
@@ -46,5 +47,18 @@ namespace CodeCave.WakaTime.Revit
             }
         }
 
+        private void LinkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            const string wakaTimeUrl = "https://wakatime.com/settings/account";
+
+            try
+            {
+                Process.Start(wakaTimeUrl);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
     }
 }

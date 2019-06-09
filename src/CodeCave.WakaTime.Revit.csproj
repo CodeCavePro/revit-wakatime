@@ -105,6 +105,7 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
     <Compile Include="Forms\*.cs" Exclude="Forms\*.Designer.cs" />
+    <Compile Include="FileLogger.cs" />
 
     <Compile Include="Forms\SettingsForm.Designer.cs">
       <DesignTime>True</DesignTime>
@@ -114,6 +115,7 @@
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
       <DependentUpon>SettingsForm.cs</DependentUpon>
+      <LastGenOutput>SettingsForm.Designer.cs</LastGenOutput>
     </EmbeddedResource>
 
     <Compile Include="Forms\ApiKeyForm.Designer.cs">
@@ -124,6 +126,7 @@
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
       <DependentUpon>ApiKeyForm.cs</DependentUpon>
+      <LastGenOutput>ApiKeyForm.Designer.cs</LastGenOutput>
     </EmbeddedResource>
 
     <Compile Include="Forms\DownloadProgressForm.Designer.cs">
@@ -134,6 +137,7 @@
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
       <DependentUpon>DownloadProgressForm.cs</DependentUpon>
+      <LastGenOutput>DownloadProgressForm.Designer.cs</LastGenOutput>
     </EmbeddedResource>
 
 

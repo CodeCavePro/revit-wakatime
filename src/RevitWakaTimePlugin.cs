@@ -3,17 +3,17 @@ using Autodesk.Revit.DB.Events;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
 using WakaTime;
-using CodeCave.WakaTime.Revit;
 
 namespace CodeCave.WakaTime.Revit
 {
     public class RevitWakaTimePlugin : WakaTimeIdePlugin<UIApplication>, IDisposable, IWin32Window
     {
         protected bool disposed;
+
+        protected ILogService logger;
 
         private SettingsForm _settingsForm;
         private ApiKeyForm _apiKeyForm;
@@ -54,25 +54,18 @@ namespace CodeCave.WakaTime.Revit
 
                 if (_downloadProgressForm != null && !_downloadProgressForm.IsDisposed)
                     _downloadProgressForm.Dispose();
-            }
 
-            // Idling and initialization
-            editorObj.Idling -= OnIdling;
-            editorObj.Application.ApplicationInitialized -= OnApplicationInitialized;
-            // Open / change
-            editorObj.Application.DocumentOpened -= OnDocumentOpened;
-            editorObj.Application.DocumentChanged -= OnDocumentChanged;
-            // Save / SaveAs
-            editorObj.Application.DocumentSaved -= OnDocumentSaved;
-            editorObj.Application.DocumentSavedAs -= OnDocumentSavedAs;
-            // Progress & Failure
-            editorObj.Application.ProgressChanged -= OnProgressChanged;
-            editorObj.Application.FailuresProcessing -= OnFailuresProcessing;
-            // Closing
-            editorObj.Application.DocumentClosing -= OnDocumentClosing;
-            editorObj.Application.DocumentClosed -= OnDocumentClosed;
-            // Views
-            editorObj.ViewActivated -= OnViewActivated;
+                // Open / change
+                editorObj.Application.DocumentOpened -= OnDocumentOpened;
+                editorObj.Application.DocumentChanged -= OnDocumentChanged;
+                // Save / SaveAs
+                editorObj.Application.DocumentSaved -= OnDocumentSaved;
+                editorObj.Application.DocumentSavedAs -= OnDocumentSavedAs;
+                // Closing
+                editorObj.Application.DocumentClosing -= OnDocumentClosing;
+                // Views
+                editorObj.ViewActivated -= OnViewActivated;
+            }
 
             // Release unmanaged resources.
             // Set large fields to null.
@@ -96,7 +89,7 @@ namespace CodeCave.WakaTime.Revit
         /// <returns></returns>
         public override string GetActiveSolutionPath()
         {
-            var activeDocumentPath = editorObj?.ActiveUIDocument?.Document?.PathName;
+            var activeDocumentPath = editorObj?.ActiveUIDocument.Document?.PathName;
             return (string.IsNullOrWhiteSpace(activeDocumentPath))
                 ? null
                 : Directory.GetParent(activeDocumentPath)?.FullName;
@@ -110,10 +103,10 @@ namespace CodeCave.WakaTime.Revit
 
             return editorInfo ?? (editorInfo = new EditorInfo
             {
-                Name = "Autodesk Revit",
-                Version = new Version(int.Parse(editorObj.Application.VersionNumber), int.Parse(editorObj.Application.VersionBuild)),
-                PluginKey = "autodesk-revit",
-                PluginName = "WakaTime",
+                Name = "Revit",
+                Version = new Version(editorObj.Application.SubVersionNumber),
+                PluginKey = "revit-wakatime",
+                PluginName = nameof(WakaTime),
                 PluginVersion = GetType().Assembly.GetName().Version
             });
         }
@@ -124,7 +117,9 @@ namespace CodeCave.WakaTime.Revit
         /// <returns></returns>
         public override ILogService GetLogger()
         {
-            throw new NotImplementedException();
+            var roamingFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            var appData = Path.Combine(roamingFolder, "Autodesk", "Revit", $"Autodesk Revit {editorObj.Application.VersionNumber}");
+            return logger ?? (logger = new FileLogger(appData));
         }
 
         #endregion
@@ -165,47 +160,16 @@ namespace CodeCave.WakaTime.Revit
         /// </summary>
         public override void BindEditorEvents()
         {
-            // Idling and initialization
-            editorObj.Idling += OnIdling;
-            editorObj.Application.ApplicationInitialized += OnApplicationInitialized;
             // Open / change
             editorObj.Application.DocumentOpened += OnDocumentOpened;
             editorObj.Application.DocumentChanged += OnDocumentChanged;
             // Save / SaveAs
             editorObj.Application.DocumentSaved += OnDocumentSaved;
             editorObj.Application.DocumentSavedAs += OnDocumentSavedAs;
-            // Progress & Failure
-            editorObj.Application.ProgressChanged += OnProgressChanged;
-            editorObj.Application.FailuresProcessing += OnFailuresProcessing;
             // Closing
             editorObj.Application.DocumentClosing += OnDocumentClosing;
-            editorObj.Application.DocumentClosed += OnDocumentClosed;
             // Views
             editorObj.ViewActivated += OnViewActivated;
-        }
-
-        /// <summary>
-        /// Called when [idling].
-        /// This event is raised only when the Revit UI is in a state
-        /// when there is no active document.
-        /// </summary>
-        /// <param name="sender">The sender.</param>
-        /// <param name="args">The <see cref="T:Autodesk.Revit.UI.Events.IdlingEventArgs" /> instance containing the event data.</param>
-        /// ReSharper disable once MemberCanBeMadeStatic.Local
-        private void OnIdling(object sender, IdlingEventArgs args)
-        {
-            // TODO: add you code here
-        }
-
-        /// <summary>
-        /// Called when [application initialized].
-        /// </summary>
-        /// <param name="sender">The sender.</param>
-        /// <param name="args">The <see cref="T:Autodesk.Revit.DB.Events.ApplicationInitializedEventArgs" /> instance containing the event data.</param>
-        /// ReSharper disable once MemberCanBeMadeStatic.Local
-        private void OnApplicationInitialized(object sender, ApplicationInitializedEventArgs args)
-        {
-            // TODO: add you code here
         }
 
         /// <summary>
@@ -215,25 +179,26 @@ namespace CodeCave.WakaTime.Revit
         /// <param name="args">The <see cref="DocumentOpenedEventArgs" /> instance containing the event data.</param>
         private void OnDocumentOpened(object sender, DocumentOpenedEventArgs args)
         {
-            // TODO: this is just an example, remove or change code below
-            var doc = args.Document;
-            Debug.Assert(null != doc, $"Expected a valid Revit {nameof(Document)} instance");
+            if (args.Document == null)
+                return;
 
-            // TODO: this is just an example, remove or change code below
-            var app = args.Document?.Application;
-            var uiapp = new UIApplication(app);
-            Debug.Assert(null != uiapp, $"Expected a valid Revit {nameof(UIApplication)} instance");
+            var solutionPath = (args.Document.IsFamilyDocument)
+                ? Directory.GetParent(args.Document.PathName).FullName
+                : args.Document.PathName;
+
+            OnSolutionOpened(solutionPath);
+            OnDocumentOpened(args.Document.PathName);
         }
 
         /// <summary>
         /// Called when [document changed].
         /// </summary>
         /// <param name="sender">The sender.</param>
-        /// <param name="e">The <see cref="T:Autodesk.Revit.DB.Events.DocumentChangedEventArgs" /> instance containing the event data.</param>
+        /// <param name="args">The <see cref="DocumentChangedEventArgs"/> instance containing the event data.</param>
         /// ReSharper disable once MemberCanBeMadeStatic.Local
-        private void OnDocumentChanged(object sender, DocumentChangedEventArgs e)
+        private void OnDocumentChanged(object sender, DocumentChangedEventArgs args)
         {
-            // TODO: add you code here
+            ProcessActivity(args.GetDocument());
         }
 
         /// <summary>
@@ -244,7 +209,7 @@ namespace CodeCave.WakaTime.Revit
         /// ReSharper disable once MemberCanBeMadeStatic.Local
         private void OnDocumentSaved(object sender, DocumentSavedEventArgs args)
         {
-            // TODO: add you code here
+            ProcessActivity(args.Document);
         }
 
         /// <summary>
@@ -255,29 +220,7 @@ namespace CodeCave.WakaTime.Revit
         /// ReSharper disable once MemberCanBeMadeStatic.Local
         private void OnDocumentSavedAs(object sender, DocumentSavedAsEventArgs args)
         {
-            // TODO: add you code here
-        }
-
-        /// <summary>
-        /// Called when [failures processing].
-        /// </summary>
-        /// <param name="sender">The sender.</param>
-        /// <param name="e">The <see cref="FailuresProcessingEventArgs" /> instance containing the event data.</param>
-        /// ReSharper disable once MemberCanBeMadeStatic.Local
-        private void OnFailuresProcessing(object sender, FailuresProcessingEventArgs e)
-        {
-            // TODO: add you code here
-        }
-
-        /// <summary>
-        /// Called when [progress changed].
-        /// </summary>
-        /// <param name="sender">The sender.</param>
-        /// <param name="progressChangedEventArgs">The <see cref="ProgressChangedEventArgs"/> instance containing the event data.</param>
-        /// ReSharper disable once MemberCanBeMadeStatic.Local
-        private void OnProgressChanged(object sender, ProgressChangedEventArgs progressChangedEventArgs)
-        {
-            // TODO: add you code here
+            ProcessActivity(args.Document);
         }
 
         /// <summary>
@@ -288,28 +231,30 @@ namespace CodeCave.WakaTime.Revit
         /// ReSharper disable once MemberCanBeMadeStatic.Local
         private void OnDocumentClosing(object sender, DocumentClosingEventArgs args)
         {
-            // TODO: add you code here
-        }
-
-        /// <summary>
-        /// Called when [document closed].
-        /// </summary>
-        /// <param name="sender">The sender.</param>
-        /// <param name="args">The <see cref="DocumentClosedEventArgs" /> instance containing the event data.</param>
-        /// ReSharper disable once MemberCanBeMadeStatic.Local
-        private void OnDocumentClosed(object sender, DocumentClosedEventArgs args)
-        {
-            // TODO: add you code here
+            ProcessActivity(args.Document);
         }
 
         /// <summary>
         /// Called when [view activated].
         /// </summary>
         /// <param name="sender">The sender.</param>
-        /// <param name="e">The <see cref="ViewActivatedEventArgs" /> instance containing the event data.</param>
-        private void OnViewActivated(object sender, ViewActivatedEventArgs e)
+        /// <param name="args">The <see cref="ViewActivatedEventArgs"/> instance containing the event data.</param>
+        private void OnViewActivated(object sender, ViewActivatedEventArgs args)
         {
-            // TODO: add you code here
+            ProcessActivity(args.Document);
+        }
+
+        private void ProcessActivity(Document doc)
+        {
+            if (doc == null)
+                return;
+
+            var solutionPath = (doc.IsFamilyDocument)
+                ? Directory.GetParent(doc.PathName).FullName
+                : doc.PathName;
+
+            OnSolutionOpened(solutionPath);
+            OnDocumentChanged(doc.PathName);
         }
 
         #endregion

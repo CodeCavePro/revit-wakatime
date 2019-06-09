@@ -6,6 +6,8 @@
         private System.Windows.Forms.Label lblAPIKey;
         private System.Windows.Forms.TextBox txtAPIKey;
         private System.Windows.Forms.Button btnOk;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.LinkLabel linkLabel1;
 
         /// <summary>
         /// Required designer variable.
@@ -82,6 +84,7 @@
             this.linkLabel1.TabStop = true;
             this.linkLabel1.Text = "https://wakatime.com";
             this.linkLabel1.UseCompatibleTextRendering = true;
+            this.linkLabel1.LinkClicked += LinkLabel1_LinkClicked;
             //
             // label2
             //
@@ -117,8 +120,5 @@
         }
 
         #endregion
-
-        private System.Windows.Forms.LinkLabel linkLabel1;
-        private System.Windows.Forms.Label label2;
     }
 }
